@@ -7,23 +7,29 @@ import { requireAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-const uploadsDir = path.resolve("uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
 const storage = multer.diskStorage({
   destination: function (_req, _file, cb) {
-    cb(null, uploadsDir);
+    const uploadPath = path.join(process.cwd(), "uploads");
+
+    // Create uploads folder ONLY when needed
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+
+    cb(null, uploadPath);
   },
+
   filename: function (_req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
   },
 });
 
 const upload = multer({ storage });
+
+// ================= ROUTES =================
+
 router.post(
   "/create",
   requireAuth,
@@ -34,6 +40,7 @@ router.post(
   ]),
   courseController.createCourse
 );
+
 router.get("/", courseController.listCourses);
 router.get("/:id", courseController.getCourseById);
 router.delete("/:id", requireAuth, courseController.deleteCourse);
