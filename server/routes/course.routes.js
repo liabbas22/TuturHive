@@ -7,22 +7,23 @@ import { requireAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
 
+// ✅ Serverless-safe writable directory
+const uploadsDir = "/tmp/uploads";
+
+// ✅ Ensure directory exists
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
-  destination: function (_req, _file, cb) {
-    const uploadPath = path.join(process.cwd(), "uploads");
-
-    // Create uploads folder ONLY when needed
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-
-    cb(null, uploadPath);
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsDir);
   },
 
-  filename: function (_req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+  filename: (_req, file, cb) => {
+    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+    cb(null, `${file.fieldname}-${unique}${ext}`);
   },
 });
 
