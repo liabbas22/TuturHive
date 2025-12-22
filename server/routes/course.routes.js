@@ -7,29 +7,23 @@ import { requireAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// ✅ ONLY writable directory in serverless
-const uploadsDir = "/tmp/uploads";
-
-// ✅ Create directory safely
+const uploadsDir = path.resolve("uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
+  destination: function (_req, _file, cb) {
     cb(null, uploadsDir);
   },
-  filename: (_req, file, cb) => {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+  filename: function (_req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${unique}${ext}`);
+    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
   },
 });
 
 const upload = multer({ storage });
-
-// ================= ROUTES =================
-
 router.post(
   "/create",
   requireAuth,
@@ -40,7 +34,6 @@ router.post(
   ]),
   courseController.createCourse
 );
-
 router.get("/", courseController.listCourses);
 router.get("/:id", courseController.getCourseById);
 router.delete("/:id", requireAuth, courseController.deleteCourse);
