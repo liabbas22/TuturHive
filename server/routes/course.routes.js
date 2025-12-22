@@ -24,8 +24,6 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
-
-// Accept multiple images (images[]), optional legacy single image (image), and single video (video)
 router.post(
   "/create",
   requireAuth,
@@ -38,5 +36,6 @@ router.post(
 );
 router.get("/", courseController.listCourses);
 router.get("/:id", courseController.getCourseById);
+router.delete("/:id", requireAuth, courseController.deleteCourse);
 
 export default router;

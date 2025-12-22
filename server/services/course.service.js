@@ -1,7 +1,42 @@
 import Course from "../models/Course.js";
 
-export const createCourseService = async ({ title, description, price, imageUrl, imageUrls, videoUrl, category, format, tutor }) => {
-  const course = new Course({ title, description, price, imageUrl, imageUrls, videoUrl, category, format, tutor });
+export const createCourseService = async ({
+  title,
+  description,
+  price,
+  imageUrl,
+  imageUrls,
+  videoUrl,
+  category,
+  format,
+  driveLink,
+  tutor,
+  sections,
+  lectures,
+  duration,
+  language,
+  ratings,
+  ratingsCount,
+}) => {
+  const course = new Course({
+    title,
+    description,
+    price,
+    imageUrl,
+    imageUrls,
+    videoUrl,
+    category,
+    format,
+    driveLink,
+    tutor,
+    sections,
+    lectures,
+    duration,
+    language,
+    ratings,
+    ratingsCount,
+  });
+
   await course.save();
   return course;
 };
@@ -19,10 +54,26 @@ export const getCourseByIdService = async (courseId) => {
   return course;
 };
 
+export const deleteCourseService = async (courseId, tutorId) => {
+  const course = await Course.findById(courseId);
+  if (!course) {
+    throw new Error("Course not found");
+  }
+  
+  // Check if the course belongs to the tutor
+  if (course.tutor.toString() !== tutorId) {
+    throw new Error("You don't have permission to delete this course");
+  }
+  
+  await Course.findByIdAndDelete(courseId);
+  return { message: "Course deleted successfully" };
+};
+
 const courseService = {
   createCourseService,
   listCoursesService,
   getCourseByIdService,
+  deleteCourseService,
 };
 
 export default courseService;

@@ -1,13 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useCourses } from '../contexts/courseContext';
 import { useAuth } from '../contexts/AuthContext';
 import type { Course } from '../apis/course';
 
 const TutorCourses: React.FC = () => {
-  const { courses, setCourses } = useCourses();
+  const { courses, deleteCourse } = useCourses();
   const { user } = useAuth();
-  const [showAddForm, setShowAddForm] = useState(false);
 
   const myCourses = useMemo(() => {
     if (!user) return [] as Course[];
@@ -16,14 +15,18 @@ const TutorCourses: React.FC = () => {
       return tutorId === user.id;
     });
   }, [courses, user]);
-
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const handleEdit = (course: Course) => {
     // Handle edit functionality
     console.log('Edit course:', course);
   };
 
-  const handleDelete = (courseId: string) => {
-    setCourses(courses.filter((course: Course) => course._id !== courseId));
+  const handleDelete = async (courseId: string) => {
+    try {
+      await deleteCourse(courseId);
+    } catch (err) {
+      console.error('Failed to delete course', err);
+    }
   };
 
   return (
@@ -32,7 +35,7 @@ const TutorCourses: React.FC = () => {
         <h1 className="text-3xl font-bold text-gray-900">My Courses</h1>
         <div className="flex space-x-4">
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={() => { }}
             className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors flex items-center space-x-2"
           >
             <Plus className="h-5 w-5" />
@@ -46,7 +49,7 @@ const TutorCourses: React.FC = () => {
           <div key={course._id} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             {course.imageUrl && (
               <img
-                src={`http://localhost:5000${course.imageUrl}`}
+                src={`${backendUrl}${course.imageUrl}`}
                 alt={course.title}
                 className="w-full h-48 object-cover"
               />
@@ -80,7 +83,7 @@ const TutorCourses: React.FC = () => {
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">You haven't created any courses yet.</p>
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={() => { /* TODO: open add-course flow */ }}
             className="mt-4 bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
           >
             Create Your First Course

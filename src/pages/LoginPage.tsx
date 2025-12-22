@@ -1,30 +1,34 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { GraduationCap } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { GraduationCap } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { toast } from "react-toastify";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    role: 'student' as 'student' | 'tutor'
+    email: "",
+    password: "",
+    role: "student" as "student" | "tutor",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const roleHint = formData.role;
-      const userBeforeRedirect = await (async () => {
-        await login(formData.email, formData.password, roleHint as any);
-        return null;
-      })();
-      // After login, redirect based on role hint if available; otherwise default to student
-      const isTutor = roleHint === 'tutor';
-      navigate(isTutor ? '/tutor-dashboard' : '/student-dashboard');
+      await login(formData.email, formData.password, roleHint as any);
+
+      // Redirect based on selected role
+      if (roleHint === "tutor") {
+        toast.success("Teacher panel login successfully!");
+        navigate("/tutor-dashboard");
+      } else {
+        navigate("/student-dashboard");
+        toast.success("You login successfully!");
+      }
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error("Login failed:", error);
     }
   };
 
@@ -36,31 +40,39 @@ const LoginPage: React.FC = () => {
             <div className="flex justify-center mb-6">
               <GraduationCap className="h-12 w-12 text-yellow-600" />
             </div>
-            <h2 className="text-center text-3xl font-extrabold text-gray-900">
+            <h2 className="text-center text-2xl tracking-wide font-bold font-merienda text-gray-900">
               Welcome back to TutorHive
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
+            <p className="mt-2 text-center text-sm text-gray-600 font-playDEGrund tracking-wider">
               Sign in to your account
             </p>
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-gray-700 font-merienda">
                 Role
               </label>
               <div className="mt-1 grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, role: 'student' })}
-                  className={`p-2 border rounded ${formData.role === 'student' ? 'border-yellow-600 bg-yellow-50 text-yellow-700' : 'border-gray-300'}`}
+                  onClick={() => setFormData({ ...formData, role: "student" })}
+                  className={`p-2 border rounded  ${
+                    formData.role === "student"
+                      ? "border-yellow-600 bg-yellow-50 text-yellow-700"
+                      : "border-gray-300"
+                  }`}
                 >
                   Student
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, role: 'tutor' })}
-                  className={`p-2 border rounded ${formData.role === 'tutor' ? 'border-yellow-600 bg-yellow-50 text-yellow-700' : 'border-gray-300'}`}
+                  onClick={() => setFormData({ ...formData, role: "tutor" })}
+                  className={`p-2 border rounded ${
+                    formData.role === "tutor"
+                      ? "border-yellow-600 bg-yellow-50 text-yellow-700"
+                      : "border-gray-300"
+                  }`}
                 >
                   Tutor
                 </button>
@@ -68,7 +80,10 @@ const LoginPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 font-merienda"
+              >
                 Email Address
               </label>
               <div className="mt-1">
@@ -78,15 +93,20 @@ const LoginPage: React.FC = () => {
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm"
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  className="tracking-wider appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm"
                   placeholder="Email address"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 font-merienda"
+              >
                 Password
               </label>
               <div className="mt-1">
@@ -96,7 +116,9 @@ const LoginPage: React.FC = () => {
                   type="password"
                   required
                   value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm"
                   placeholder="Password"
                 />
@@ -116,8 +138,11 @@ const LoginPage: React.FC = () => {
           <div className="mt-6">
             <div className="text-center">
               <span className="text-sm text-gray-600">
-                Don't have an account?{' '}
-                <button onClick={() => navigate('/signup')} className="font-medium text-yellow-600 hover:text-yellow-500">
+                Don't have an account?{" "}
+                <button
+                  onClick={() => navigate("/signup")}
+                  className="font-medium text-yellow-600 hover:text-yellow-500"
+                >
                   Sign up
                 </button>
               </span>

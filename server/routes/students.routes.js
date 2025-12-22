@@ -9,7 +9,7 @@ router.post("/login", studentController.login);
 router.post("/logout", studentController.logout);
 router.get("/me", requireAuth, studentController.getMe);
 router.put("/me", requireAuth, studentController.updateProfile);
-router.post("/purchase", requireAuth, studentController.purchaseCourse);
+router.post("/purchase-course", requireAuth, studentController.purchaseCourse);
 
 export default router;
 
