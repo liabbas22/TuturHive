@@ -7,18 +7,18 @@ import { requireAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
 
+// Multer storage for serverless /tmp
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const uploadDir = "/tmp/uploads";
 
-    // ✅ Create directory ONLY when request happens
+    // Create /tmp/uploads only when needed
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
     cb(null, uploadDir);
   },
-
   filename: (_req, file, cb) => {
     const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
@@ -29,7 +29,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ================= ROUTES =================
-
 router.post(
   "/create",
   requireAuth,
