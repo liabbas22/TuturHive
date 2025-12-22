@@ -19,7 +19,7 @@ const LoginPage: React.FC = () => {
       const roleHint = formData.role;
       await login(formData.email, formData.password, roleHint as any);
 
-      // Redirect based on selected role
+
       if (roleHint === "tutor") {
         toast.success("Teacher panel login successfully!");
         navigate("/tutor-dashboard");
