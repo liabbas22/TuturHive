@@ -7,13 +7,17 @@ import { requireAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-const uploadsDir = path.resolve("uploads");
+/* ✅ VERCEL-SAFE UPLOAD DIRECTORY */
+const uploadsDir = "/tmp/uploads";
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsDir);
+  },
   filename: (_req, file, cb) => {
     const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, `${file.fieldname}-${unique}${path.extname(file.originalname)}`);
