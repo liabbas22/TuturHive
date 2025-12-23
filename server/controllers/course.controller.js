@@ -3,6 +3,9 @@ import Tutor from "../models/Tutor.js";
 
 const createCourse = async (req, res) => {
   try {
+    if (req.user.role !== "tutor")
+      return res.status(403).json({ message: "Only tutors allowed" });
+
     const {
       title,
       description,
@@ -14,46 +17,20 @@ const createCourse = async (req, res) => {
       lectures,
       duration,
       language,
-      ratings,
-      ratingsCount,
     } = req.body;
 
-    if (!title || !description || price === undefined) {
-      return res.status(400).json({ message: "Invalid data" });
-    }
-
-    if (!req.user || req.user.role !== "tutor") {
-      return res.status(403).json({ message: "Only tutors can create courses" });
-    }
-
-    // Ensure sections and lectures are numbers and set defaults
-    const safeSections = Number(sections) > 0 ? Number(sections) : 1;
-    const safeLectures = Number(lectures) > 0 ? Number(lectures) : 1;
-
-    let imageUrl;
-    let imageUrls;
-    let videoUrl;
+    let imageUrl, imageUrls, videoUrl;
 
     if (req.files) {
-      const imageFiles = Array.isArray(req.files.images) ? req.files.images : [];
-      const legacyImage = Array.isArray(req.files.image) ? req.files.image : [];
-      const videoFiles = Array.isArray(req.files.video) ? req.files.video : [];
+      const images = [...(req.files.image || []), ...(req.files.images || [])];
 
-      const mappedImages = imageFiles.map(f => `/api/uploads/${f.filename}`);
-      const mappedLegacy = legacyImage.map(f => `/api/uploads/${f.filename}`);
-      const combinedImages = [...mappedLegacy, ...mappedImages];
+      if (images.length === 1)
+        imageUrl = `/api/uploads/${images[0].filename}`;
+      if (images.length > 1)
+        imageUrls = images.map(f => `/api/uploads/${f.filename}`);
 
-      if (combinedImages.length === 1) {
-        imageUrl = combinedImages[0];
-      } else if (combinedImages.length > 1) {
-        imageUrls = combinedImages;
-      }
-
-      if (videoFiles.length > 0) {
-        videoUrl = `/api/uploads/${videoFiles[0].filename}`;
-      }
-    } else if (req.file) {
-      imageUrl = `/api/uploads/${req.file.filename}`;
+      if (req.files.video?.[0])
+        videoUrl = `/api/uploads/${req.files.video[0].filename}`;
     }
 
     const course = await courseService.createCourseService({
@@ -67,85 +44,47 @@ const createCourse = async (req, res) => {
       format,
       driveLink,
       tutor: req.user.id,
-      sections: safeSections,
-      lectures: safeLectures,
+      sections: Number(sections) || 1,
+      lectures: Number(lectures) || 1,
       duration: duration || "0h 0m",
       language: language || "English",
-      ratings: ratings || 0,
-      ratingsCount: ratingsCount || 0,
     });
 
-    await Tutor.findByIdAndUpdate(
-      req.user.id,
-      { $push: { courses: course._id } },
-      { new: true }
-    );
+    await Tutor.findByIdAndUpdate(req.user.id, {
+      $push: { courses: course._id },
+    });
 
     res.status(201).json({ course });
   } catch (err) {
-    res.status(500).json({
-      message: "Server error",
-      error: err.message,
-    });
+    res.status(500).json({ message: err.message });
   }
 };
 
 const listCourses = async (_req, res) => {
-  try {
-    const courses = await courseService.listCoursesService();
-    res.status(200).json({ courses });
-  } catch (err) {
-    res.status(500).json({
-      message: "Server error",
-      error: err.message,
-    });
-  }
+  const courses = await courseService.listCoursesService();
+  res.json({ courses });
 };
 
 const getCourseById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const course = await courseService.getCourseByIdService(id);
-    res.status(200).json({ course });
-  } catch (err) {
-    if (err.message === "Course not found") {
-      return res.status(404).json({ message: "Course not found" });
-    }
-    res.status(500).json({
-      message: "Server error",
-      error: err.message,
-    });
-  }
+  const course = await courseService.getCourseByIdService(req.params.id);
+  if (!course) return res.status(404).json({ message: "Not found" });
+  res.json({ course });
 };
 
 const deleteCourse = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!req.user || req.user.role !== 'tutor') {
-      return res.status(403).json({ message: "Only tutors can delete courses" });
-    }
+  if (req.user.role !== "tutor")
+    return res.status(403).json({ message: "Forbidden" });
 
-    const result = await courseService.deleteCourseService(id, req.user.id);
-    res.status(200).json(result);
-  } catch (err) {
-    if (err.message === "Course not found") {
-      return res.status(404).json({ message: "Course not found" });
-    }
-    if (err.message === "You don't have permission to delete this course") {
-      return res.status(403).json({ message: "You don't have permission to delete this course" });
-    }
-    res.status(500).json({
-      message: "Server error",
-      error: err.message,
-    });
-  }
+  const result = await courseService.deleteCourseService(
+    req.params.id,
+    req.user.id
+  );
+  res.json(result);
 };
 
-const courseController = {
+export default {
   createCourse,
   listCourses,
   getCourseById,
   deleteCourse,
 };
-
-export default courseController;
