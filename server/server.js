@@ -35,7 +35,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 /* ✅ SERVE UPLOADED FILES (IMPORTANT FIX) */
-app.use("/api/uploads", express.static("/tmp/uploads"));  
+app.use("/api/uploads", express.static("/tmp"));
 
 app.get("/api/health", (_req, res) => res.send("OK"));
 

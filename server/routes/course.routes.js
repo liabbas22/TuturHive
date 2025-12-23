@@ -1,30 +1,20 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 import courseController from "../controllers/course.controller.js";
 import { requireAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-/* ✅ VERCEL-SAFE UPLOAD DIRECTORY */
-const uploadsDir = "/tmp/uploads";
-
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (_req, file, cb) => {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, `${file.fieldname}-${unique}${path.extname(file.originalname)}`);
-  },
+/* ✅ VERCEL-SAFE TEMP DIRECTORY */
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: "/tmp",
+    filename: (_req, file, cb) => {
+      const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      cb(null, `${unique}-${file.originalname}`);
+    },
+  }),
 });
-
-const upload = multer({ storage });
 
 router.post(
   "/create",
